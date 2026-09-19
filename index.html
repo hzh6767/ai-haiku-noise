@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A tiny local machine for turning any thought into a three-line absurd haiku.">
+  <title>AI Haiku Noise</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div class="eyebrow"><span class="status-dot" aria-hidden="true"></span> local imagination engine / v0.7</div>
+      <h1>AI Haiku <em>Noise</em></h1>
+      <p class="lede">Feed the tiny oracle a thought. It will return three lines of beautifully unhelpful weather.</p>
+    </header>
+
+    <section class="workspace" aria-label="Haiku generator">
+      <div class="input-panel">
+        <label for="prompt">Your raw material</label>
+        <textarea id="prompt" maxlength="240" placeholder="e.g. I forgot why I walked into the kitchen...">I forgot why I walked into the kitchen</textarea>
+        <div class="field-footer"><span id="char-count">0 / 240</span><span>any language, one thought</span></div>
+        <button class="primary-button" id="generate" type="button"><span aria-hidden="true">✦</span> Generate noise</button>
+        <div class="sample-row" aria-label="Sample prompts">
+          <span>Try:</span>
+          <button type="button" class="sample" data-sample="A pigeon owes me a small apology">pigeon apology</button>
+          <button type="button" class="sample" data-sample="My socks have formed a committee">sock committee</button>
+          <button type="button" class="sample" data-sample="The moon is buffering again">buffering moon</button>
+        </div>
+      </div>
+
+      <div class="output-panel" aria-live="polite">
+        <div class="output-top"><span class="label">generated artifact</span><span id="stamp">ready when you are</span></div>
+        <div class="haiku" id="haiku-output">
+          <p>Kitchen ghosts count spoons</p>
+          <p>My question wears a raincoat</p>
+          <p>Tuesday blinks twice</p>
+        </div>
+        <div class="output-bottom"><span id="meter">absurdity: 83%</span><button class="ghost-button" id="copy" type="button">Copy haiku</button></div>
+      </div>
+    </section>
+
+    <footer><span>Runs entirely in your browser.</span><span>no training data was harmed</span></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
