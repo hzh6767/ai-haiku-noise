@@ -23,8 +23,13 @@ test('hash matches hand-computed vectors', () => {
 
 test('hash iterates by code point, so an astral character counts once', () => {
   assert.equal('\u{1F600}'.length, 2, 'sanity: surrogate pair has length 2');
-  assert.equal(core.hash('\u{1F600}'), 17 * 31 + 0xd83d);
-  assert.equal(core.hash('\u{1F600}'), 55884);
+  assert.equal(core.hash('\u{1F600}'), 17 * 31 + 0x1F600);
+  assert.equal(core.hash('\u{1F600}'), 129039);
+});
+
+test('astral characters sharing a high surrogate do not collide', () => {
+  assert.notEqual(core.hash('\u{1F600}'), core.hash('\u{1F601}'));
+  assert.notDeepEqual(core.linesFor(core.hash('\u{1F600}')), core.linesFor(core.hash('\u{1F601}')));
 });
 
 test('hash is a pure unsigned 32-bit function of its input', () => {

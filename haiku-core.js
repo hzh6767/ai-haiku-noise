@@ -14,7 +14,9 @@ function hash(text) {
     throw new TypeError('hash expects a string');
   }
   let value = 17;
-  for (const char of text) value = (value * 31 + char.charCodeAt(0)) >>> 0;
+  // for..of iterates by code point; codePointAt(0) hashes the whole code point so
+  // astral characters (emoji, rare CJK) do not collapse onto their high surrogate.
+  for (const char of text) value = (value * 31 + char.codePointAt(0)) >>> 0;
   return value;
 }
 
