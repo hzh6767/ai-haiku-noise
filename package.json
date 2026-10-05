@@ -1,0 +1,10 @@
+{
+  "name": "ai-haiku-noise",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Zero-dependency browser toy that turns a sentence into a deterministic three-line absurd haiku.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  }
+}

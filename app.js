@@ -1,36 +1,75 @@
-const prompt = document.querySelector('#prompt');
-const count = document.querySelector('#char-count');
-const output = document.querySelector('#haiku-output');
-const meter = document.querySelector('#meter');
-const stamp = document.querySelector('#stamp');
-const copyButton = document.querySelector('#copy');
+/* UI layer for AI Haiku Noise. Every deterministic value comes from haiku-core.js,
+   which must be loaded first and exposes the global `HaikuCore`. */
 
-const openings = ['Neon turnips bloom', 'A velvet thunderclap', 'Small planets rehearse', 'The hallway sighs once', 'Paper comets descend', 'Blue potatoes hum'];
-const middles = ['while your idea folds inward', 'my left shoe negotiates', 'and the kettle learns jazz', 'as invisible ducks vote', 'beneath a polite eclipse', 'where passwords grow whiskers'];
-const endings = ['Tuesday forgets your name', 'the moon requests a receipt', 'nothing is technically soup', 'a spoon applauds itself', 'tomorrow wears mittens', 'the floor keeps the secret'];
+function init() {
+  const core = globalThis.HaikuCore;
+  const prompt = document.querySelector('#prompt');
+  const count = document.querySelector('#char-count');
+  const output = document.querySelector('#haiku-output');
+  const meter = document.querySelector('#meter');
+  const stamp = document.querySelector('#stamp');
+  const copyButton = document.querySelector('#copy');
+  const copyStatus = document.querySelector('#copy-status');
+  const limitStatus = document.querySelector('#limit-status');
+  const generateButton = document.querySelector('#generate');
 
-function hash(text) {
-  let value = 17;
-  for (const char of text) value = (value * 31 + char.charCodeAt(0)) >>> 0;
-  return value;
+  if (!core || !prompt || !count || !output || !meter || !stamp || !copyButton || !copyStatus || !limitStatus || !generateButton) return;
+
+  function generate() {
+    const text = prompt.value.trim() || core.FALLBACK_TEXT;
+    const seed = core.hash(text);
+    const lines = core.linesFor(seed);
+    output.replaceChildren(...lines.map((line) => { const p = document.createElement('p'); p.textContent = line; return p; }));
+    meter.textContent = `absurdity: ${core.absurdityFor(seed)}%`;
+    stamp.textContent = `seed ${seed} / just now`;
+    limitStatus.textContent = '';
+  }
+
+  function updateCount() {
+    const length = prompt.value.length;
+    count.textContent = `${length} / ${core.MAX_CHARS}`;
+    const remaining = core.MAX_CHARS - length;
+    limitStatus.textContent = remaining <= 20 ? `${remaining} character${remaining === 1 ? '' : 's'} remaining` : '';
+  }
+
+  function selectOutput() {
+    const range = document.createRange();
+    range.selectNodeContents(output);
+    const selection = window.getSelection();
+    if (!selection) return false;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    return selection.toString().trim().length > 0;
+  }
+
+  async function copyHaiku() {
+    const text = [...output.querySelectorAll('p')].map((line) => line.textContent).join('\n');
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      copied = true;
+    } catch {
+      // A page opened from disk has no clipboard API, so select the haiku and let
+      // the user finish the copy with their own keyboard shortcut.
+      copied = selectOutput() && document.execCommand('copy');
+    }
+    copyButton.textContent = copied ? 'Copied' : 'Press Ctrl/Cmd+C';
+    copyStatus.textContent = copied ? 'Haiku copied to clipboard.' : 'Haiku selected. Press Control or Command plus C to copy it.';
+    setTimeout(() => { copyButton.textContent = 'Copy haiku'; copyStatus.textContent = ''; }, 2000);
+  }
+
+  prompt.addEventListener('input', updateCount);
+  generateButton.addEventListener('click', generate);
+  document.querySelectorAll('[data-sample]').forEach((button) => button.addEventListener('click', () => {
+    prompt.value = button.dataset.sample;
+    updateCount();
+    generate();
+  }));
+  copyButton.addEventListener('click', copyHaiku);
+
+  updateCount();
+  generate();
 }
 
-function generate() {
-  const text = prompt.value.trim() || 'A thought with no luggage';
-  const seed = hash(text);
-  const pick = (items, offset) => items[(seed + offset) % items.length];
-  const lines = [pick(openings, 3), pick(middles, 11), pick(endings, 23)];
-  output.replaceChildren(...lines.map((line) => { const p = document.createElement('p'); p.textContent = line; return p; }));
-  const absurdity = 61 + (seed % 39);
-  meter.textContent = `absurdity: ${absurdity}%`;
-  stamp.textContent = `seed ${String(seed).slice(-4)} / just now`;
-}
-
-prompt.addEventListener('input', () => { count.textContent = `${prompt.value.length} / 240`; });
-document.querySelector('#generate').addEventListener('click', generate);
-document.querySelectorAll('[data-sample]').forEach((button) => button.addEventListener('click', () => { prompt.value = button.dataset.sample; prompt.dispatchEvent(new Event('input')); generate(); }));
-copyButton.addEventListener('click', async () => {
-  const text = [...output.querySelectorAll('p')].map((line) => line.textContent).join('\n');
-  try { await navigator.clipboard.writeText(text); copyButton.textContent = 'Copied'; setTimeout(() => { copyButton.textContent = 'Copy haiku'; }, 1400); } catch { copyButton.textContent = 'Select to copy'; }
-});
-prompt.dispatchEvent(new Event('input'));
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();

@@ -19,7 +19,11 @@
       <div class="input-panel">
         <label for="prompt">Your raw material</label>
         <textarea id="prompt" maxlength="240" placeholder="e.g. I forgot why I walked into the kitchen...">I forgot why I walked into the kitchen</textarea>
-        <div class="field-footer"><span id="char-count">0 / 240</span><span>any language, one thought</span></div>
+        <div class="field-footer">
+          <span id="char-count">0 / 240</span>
+          <span>any language, one thought</span>
+          <span class="visually-hidden" id="limit-status" role="status"></span>
+        </div>
         <button class="primary-button" id="generate" type="button"><span aria-hidden="true">✦</span> Generate noise</button>
         <div class="sample-row" aria-label="Sample prompts">
           <span>Try:</span>
@@ -29,19 +33,20 @@
         </div>
       </div>
 
-      <div class="output-panel" aria-live="polite">
+      <div class="output-panel">
         <div class="output-top"><span class="label">generated artifact</span><span id="stamp">ready when you are</span></div>
-        <div class="haiku" id="haiku-output">
-          <p>Kitchen ghosts count spoons</p>
-          <p>My question wears a raincoat</p>
-          <p>Tuesday blinks twice</p>
+        <div class="haiku" id="haiku-output" aria-live="polite" aria-atomic="true"></div>
+        <div class="output-bottom">
+          <span id="meter" aria-live="polite"></span>
+          <button class="ghost-button" id="copy" type="button">Copy haiku</button>
+          <span class="visually-hidden" id="copy-status" role="status"></span>
         </div>
-        <div class="output-bottom"><span id="meter">absurdity: 83%</span><button class="ghost-button" id="copy" type="button">Copy haiku</button></div>
       </div>
     </section>
 
     <footer><span>Runs entirely in your browser.</span><span>no training data was harmed</span></footer>
   </main>
+  <script src="haiku-core.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
