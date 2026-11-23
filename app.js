@@ -15,7 +15,18 @@ function init() {
 
   if (!core || !prompt || !count || !output || !meter || !stamp || !copyButton || !copyStatus || !limitStatus || !generateButton) return;
 
+  let copyRequest = 0;
+  let copyFeedbackTimer;
+
+  function clearCopyFeedback() {
+    clearTimeout(copyFeedbackTimer);
+    copyButton.textContent = 'Copy haiku';
+    copyStatus.textContent = '';
+  }
+
   function generate() {
+    copyRequest += 1;
+    clearCopyFeedback();
     const text = prompt.value.trim() || core.FALLBACK_TEXT;
     const seed = core.hash(text);
     const lines = core.linesFor(seed);
@@ -43,19 +54,40 @@ function init() {
   }
 
   async function copyHaiku() {
+    const request = ++copyRequest;
+    clearCopyFeedback();
     const text = [...output.querySelectorAll('p')].map((line) => line.textContent).join('\n');
-    let copied = false;
+    let copied;
     try {
       await navigator.clipboard.writeText(text);
       copied = true;
     } catch {
-      // A page opened from disk has no clipboard API, so select the haiku and let
-      // the user finish the copy with their own keyboard shortcut.
-      copied = selectOutput() && document.execCommand('copy');
+      copied = false;
     }
-    copyButton.textContent = copied ? 'Copied' : 'Press Ctrl/Cmd+C';
-    copyStatus.textContent = copied ? 'Haiku copied to clipboard.' : 'Haiku selected. Press Control or Command plus C to copy it.';
-    setTimeout(() => { copyButton.textContent = 'Copy haiku'; copyStatus.textContent = ''; }, 2000);
+    if (request !== copyRequest) return;
+
+    let selected = false;
+    if (!copied) {
+      selected = selectOutput();
+      if (selected && typeof document.execCommand === 'function') {
+        try {
+          copied = document.execCommand('copy');
+        } catch {
+          // Keep the selection available for a manual copy when permission is denied.
+        }
+      }
+    }
+    if (copied) {
+      copyButton.textContent = 'Copied';
+      copyStatus.textContent = 'Haiku copied to clipboard.';
+    } else if (selected) {
+      copyButton.textContent = 'Press Ctrl/Cmd+C';
+      copyStatus.textContent = 'Haiku selected. Press Control or Command plus C to copy it.';
+    } else {
+      copyButton.textContent = 'Copy manually';
+      copyStatus.textContent = 'Select the haiku text and copy it manually.';
+    }
+    copyFeedbackTimer = setTimeout(clearCopyFeedback, 2000);
   }
 
   prompt.addEventListener('input', updateCount);
